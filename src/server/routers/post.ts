@@ -6,6 +6,7 @@ import { router, publicProcedure } from '../trpc';
 import type { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { Post, PostList } from '~/interfaces/post';
 import { prisma } from '~/server/prisma';
 
 /**
@@ -29,7 +30,13 @@ export const postRouter = router({
         cursor: z.string().nullish(),
       }),
     )
-    .query(async ({ input }) => {
+    /* 
+     * query のgeneric で指定はできる。
+     * が、指定しないこともできてしまう問題がある。
+     * またInterfaceを満たしているとしても、返してはいけないフィールドを
+     * 持ったオブジェクトを返せてしまう問題がある。
+     */
+    .query<PostList>(async ({ input }) => {
       /**
        * For pagination docs you can have a look here
        * @link https://trpc.io/docs/v11/useInfiniteQuery
@@ -46,8 +53,8 @@ export const postRouter = router({
         where: {},
         cursor: cursor
           ? {
-              id: cursor,
-            }
+            id: cursor,
+          }
           : undefined,
         orderBy: {
           createdAt: 'desc',
@@ -73,7 +80,7 @@ export const postRouter = router({
         id: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query<Post>(async ({ input }) => {
       const { id } = input;
       const post = await prisma.post.findUnique({
         where: { id },
@@ -95,7 +102,7 @@ export const postRouter = router({
         text: z.string().min(1),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation<Post>(async ({ input }) => {
       const post = await prisma.post.create({
         data: input,
         select: defaultPostSelect,

@@ -2,7 +2,8 @@ import { trpc } from '../utils/trpc';
 import type { NextPageWithLayout } from './_app';
 import type { inferProcedureInput } from '@trpc/server';
 import Link from 'next/link';
-import { Fragment } from 'react';
+import { FC, Fragment } from 'react';
+import { Post } from '~/interfaces/post';
 import type { AppRouter } from '~/server/routers/_app';
 
 const IndexPage: NextPageWithLayout = () => {
@@ -72,20 +73,13 @@ const IndexPage: NextPageWithLayout = () => {
           {postsQuery.isFetchingNextPage
             ? 'Loading more...'
             : postsQuery.hasNextPage
-            ? 'Load More'
-            : 'Nothing more to load'}
+              ? 'Load More'
+              : 'Nothing more to load'}
         </button>
 
         {postsQuery.data?.pages.map((page, index) => (
           <Fragment key={page.items[0]?.id || index}>
-            {page.items.map((item) => (
-              <article key={item.id}>
-                <h3 className="text-2xl font-semibold">{item.title}</h3>
-                <Link className="text-gray-400" href={`/post/${item.id}`}>
-                  View more
-                </Link>
-              </article>
-            ))}
+            {page.items.map((item) => (<PostContainer key={item.id} {...item} />))}
           </Fragment>
         ))}
       </div>
@@ -184,3 +178,13 @@ export default IndexPage;
 //     revalidate: 1,
 //   };
 // };
+
+/* こんな感じで、フロントの型を使いまわせる！ */
+const PostContainer: FC<Post> = (post) => {
+  return (<article key={post.id}>
+    <h3 className="text-2xl font-semibold">{post.title}</h3>
+    <Link className="text-gray-400" href={`/post/${post.id}`}>
+      View more
+    </Link>
+  </article>)
+}
